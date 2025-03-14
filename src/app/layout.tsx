@@ -57,7 +57,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Navbar />
-        <main className="container mx-auto max-w-[1200px] p-4">
+        <main className="container mx-auto max-w-[1200px] p-4 relative">
+          <div className='absolute -z-10 bg-blue-800 blur-3xl h-[200px] w-[1200px] opacity-50'></div>
+          <div className='fixed bottom-0 left-0 -z-10 bg-cyan-300 blur-3xl h-[100px] w-full opacity-10 -rotate-12'></div>
           {children}
         </main>
       </body>
