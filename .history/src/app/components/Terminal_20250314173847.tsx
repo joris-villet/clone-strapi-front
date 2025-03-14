@@ -412,9 +412,9 @@ const Terminal: React.FC<TerminalProps> = ({ servers }) => {
     xtermRef.current.clear();
     xtermRef.current.writeln(`\x1b[1;32mConnexion à ${server.username}@${server.ip}:${server.port}...\x1b[0m`);
 
-   // Créer une connexion WebSocket avec une URL provenant de l'environnement
-const ws = new WebSocket(process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3000');
-wsRef.current = ws;
+    // Créer une connexion WebSocket
+    const ws = new WebSocket('ws://localhost:3000');
+    wsRef.current = ws;
 
     ws.onopen = () => {
       // Envoyer une demande de connexion au serveur SSH
@@ -516,9 +516,7 @@ wsRef.current = ws;
 
           <div className="flex items-center gap-3">
             {/* Sélecteur de serveur */}
-            <label htmlFor="server-select" className="sr-only">Select Server</label>
             <select
-              id="server-select"
               value={selectedServer || ''}
               onChange={(e) => setSelectedServer(e.target.value || null)}
               className="bg-[#1D2C42]/70 text-white px-3 py-2 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
