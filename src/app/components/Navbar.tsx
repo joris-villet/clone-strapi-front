@@ -16,7 +16,7 @@ const Navbar = () => {
   ];
   
   return (
-    <nav className="bg-gray-800 p-4">
+    <nav className="bg-gray-800 p-4 sticky top-0">
       <div className="container mx-auto flex space-x-6">
         {navItems.map((item) => (
           <Link 
