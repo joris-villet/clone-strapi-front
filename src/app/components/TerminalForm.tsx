@@ -203,7 +203,7 @@ const TerminalForm: React.FC<TerminalFormProps> = ({ onAddServer }) => {
     username: '',
     password: '',
     ip: '',
-    port: '22',      // Port SSH par défaut
+    port: '',      // Port SSH par défaut
     rsaKey: '',
   });
 
@@ -219,11 +219,11 @@ const TerminalForm: React.FC<TerminalFormProps> = ({ onAddServer }) => {
     e.preventDefault();
     onAddServer(newInstance);
     setNewInstance({
-      name: '',      // Réinitialisation du nom
+      name: '',      
       username: '',
       password: '',
       ip: '',
-      port: '22',
+      port: '',
       rsaKey: '',
     });
     setIsFormVisible(false);

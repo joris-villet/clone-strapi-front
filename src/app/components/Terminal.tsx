@@ -524,8 +524,11 @@ const Terminal: React.FC<TerminalProps> = ({ servers }) => {
             >
               <option value="">Sélectionner un serveur</option>
               {servers.map((server) => (
+                // <option key={server.id} value={server.id}>
+                //   {server.name} ({server.username}@{server.ip}:{server.port})
+                // </option>
                 <option key={server.id} value={server.id}>
-                  {server.name} ({server.username}@{server.ip}:{server.port})
+                  {server.name} 
                 </option>
               ))}
             </select>
