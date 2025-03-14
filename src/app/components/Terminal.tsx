@@ -7,7 +7,7 @@
 
 // interface Server {
 //   id: string;
-//   name: string;      // Ajout du champ name
+//   name: string;
 //   username: string;
 //   ip: string;
 //   port: string;
@@ -40,9 +40,6 @@
 //     // Import dynamique des modules xterm
 //     const initTerminal = async () => {
 //       try {
-//         // Importer les styles en premier
-        
-        
 //         // Puis les modules
 //         const xtermModule = await import('xterm');
 //         const fitAddonModule = await import('xterm-addon-fit');
@@ -70,8 +67,9 @@
 //           fontFamily: 'Menlo, Monaco, "Courier New", monospace',
 //           fontSize: 14,
 //           lineHeight: 1.2,
-//           cols: 80,  // Définir une largeur fixe initiale
-//           rows: 24,  // Définir une hauteur fixe initiale
+//           cols: 80,
+//           rows: 24,
+//           disableStdin: true, // Désactiver l'entrée par défaut
 //         });
 
 //         // Ajouter l'addon pour ajuster la taille
@@ -148,6 +146,9 @@
 //     // Simuler une connexion (à remplacer par une vraie connexion WebSocket)
 //     setTimeout(() => {
 //       if (xtermRef.current) {
+//         // Activer l'entrée utilisateur
+//         xtermRef.current.options.disableStdin = false;
+        
 //         xtermRef.current.writeln('\x1b[1;32mConnecté!\x1b[0m');
 //         xtermRef.current.writeln('');
 //         xtermRef.current.write(`${server.username}@${server.ip}:~$ `);
@@ -175,6 +176,9 @@
 //   const disconnectFromServer = () => {
 //     if (!xtermRef.current) return;
 
+//     // Désactiver l'entrée utilisateur
+//     xtermRef.current.options.disableStdin = true;
+    
 //     xtermRef.current.clear();
 //     xtermRef.current.writeln('\x1b[1;31mDéconnecté du serveur.\x1b[0m');
 //     xtermRef.current.writeln('\x1b[33mSélectionnez un serveur pour commencer.\x1b[0m');
@@ -233,15 +237,17 @@
 //           <div
 //             ref={terminalRef}
 //             className={`h-96 w-full rounded-md overflow-hidden ${
-//               servers.length === 0 ? 'opacity-50 pointer-events-none' : ''
+//               !isConnected ? 'opacity-70 pointer-events-none' : ''
 //             }`}
 //             style={{ minWidth: '300px' }}
 //           />
 
-//           {servers.length === 0 && (
-//             <div className="absolute inset-0 flex items-center justify-center">
-//               <p className="text-gray-400 text-lg">
-//                 Ajoutez un serveur pour utiliser le terminal
+//           {!isConnected && (
+//             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+//               <p className="text-gray-400 text-lg bg-black/30 px-4 py-2 rounded">
+//                 {servers.length === 0 
+//                   ? "Ajoutez un serveur pour utiliser le terminal" 
+//                   : "Connectez-vous à un serveur pour utiliser le terminal"}
 //               </p>
 //             </div>
 //           )}
@@ -254,6 +260,7 @@
 // export default Terminal;
 
 
+// Dans Terminal.tsx
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -281,6 +288,7 @@ const Terminal: React.FC<TerminalProps> = ({ servers }) => {
   const fitAddonRef = useRef<FitAddonType | null>(null);
   const [isClientSide, setIsClientSide] = useState(false);
   const [terminalReady, setTerminalReady] = useState(false);
+  const wsRef = useRef<WebSocket | null>(null);
 
   // Vérifier si nous sommes côté client
   useEffect(() => {
@@ -369,6 +377,11 @@ const Terminal: React.FC<TerminalProps> = ({ servers }) => {
     // Nettoyage
     return () => {
       if (cleanupFunction) cleanupFunction();
+      // Fermer la connexion WebSocket si elle existe
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
     };
   }, [isClientSide]);
 
@@ -389,7 +402,7 @@ const Terminal: React.FC<TerminalProps> = ({ servers }) => {
     return () => clearTimeout(timer);
   }, [terminalReady]);
 
-  // Connecter au serveur sélectionné
+  // Connecter au serveur sélectionné via WebSocket
   const connectToServer = () => {
     if (!selectedServer || !xtermRef.current) return;
 
@@ -399,46 +412,98 @@ const Terminal: React.FC<TerminalProps> = ({ servers }) => {
     xtermRef.current.clear();
     xtermRef.current.writeln(`\x1b[1;32mConnexion à ${server.username}@${server.ip}:${server.port}...\x1b[0m`);
 
-    // Simuler une connexion (à remplacer par une vraie connexion WebSocket)
-    setTimeout(() => {
-      if (xtermRef.current) {
-        // Activer l'entrée utilisateur
-        xtermRef.current.options.disableStdin = false;
-        
-        xtermRef.current.writeln('\x1b[1;32mConnecté!\x1b[0m');
-        xtermRef.current.writeln('');
-        xtermRef.current.write(`${server.username}@${server.ip}:~$ `);
-        setIsConnected(true);
+    // Créer une connexion WebSocket
+    const ws = new WebSocket('ws://localhost:3000');
+    wsRef.current = ws;
 
-        // Simuler l'entrée utilisateur
-        xtermRef.current.onData(data => {
-          // Gérer les touches spéciales
-          if (data === '\r') { // Entrée
-            xtermRef.current?.writeln('');
-            xtermRef.current?.write(`${server.username}@${server.ip}:~$ `);
-          } else if (data === '\u007F') { // Backspace
-            // Supprimer un caractère
-            xtermRef.current?.write('\b \b');
-          } else {
-            // Afficher le caractère tapé
-            xtermRef.current?.write(data);
+    ws.onopen = () => {
+      // Envoyer une demande de connexion au serveur SSH
+      ws.send(JSON.stringify({
+        type: 'connect',
+        serverId: server.id
+      }));
+    };
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+
+      switch (message.type) {
+        case 'connected':
+          // Connexion établie
+          xtermRef.current?.writeln('\x1b[1;32mConnecté!\x1b[0m');
+          xtermRef.current?.writeln('');
+          setIsConnected(true);
+          
+          // Activer l'entrée utilisateur
+          if (xtermRef.current) {
+            xtermRef.current.options.disableStdin = false;
+            
+            // Gérer l'entrée utilisateur
+            xtermRef.current.onData((data) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                // Envoyer les données au serveur SSH
+                wsRef.current.send(JSON.stringify({
+                  type: 'command',
+                  command: data
+                }));
+              }
+            });
           }
-        });
+          break;
+
+        case 'data':
+          // Données reçues du serveur SSH
+          xtermRef.current?.write(message.data);
+          break;
+
+        case 'error':
+          // Erreur
+          xtermRef.current?.writeln(`\x1b[1;31mErreur: ${message.message}\x1b[0m`);
+          disconnectFromServer();
+          break;
+
+        case 'disconnected':
+          // Déconnexion
+          xtermRef.current?.writeln('\x1b[1;31mDéconnecté du serveur.\x1b[0m');
+          disconnectFromServer();
+          break;
       }
-    }, 1000);
+    };
+
+    ws.onerror = (error) => {
+      console.error('Erreur WebSocket:', error);
+      xtermRef.current?.writeln('\x1b[1;31mErreur de connexion WebSocket.\x1b[0m');
+      disconnectFromServer();
+    };
+
+    ws.onclose = () => {
+      if (isConnected) {
+        xtermRef.current?.writeln('\x1b[1;31mConnexion WebSocket fermée.\x1b[0m');
+        disconnectFromServer();
+      }
+    };
   };
 
   // Déconnecter du serveur
   const disconnectFromServer = () => {
-    if (!xtermRef.current) return;
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({
+        type: 'disconnect'
+      }));
+      wsRef.current.close();
+      wsRef.current = null;
+    }
 
-    // Désactiver l'entrée utilisateur
-    xtermRef.current.options.disableStdin = true;
+    if (xtermRef.current) {
+      // Désactiver l'entrée utilisateur
+      xtermRef.current.options.disableStdin = true;
+      
+      xtermRef.current.clear();
+      xtermRef.current.writeln('\x1b[1;31mDéconnecté du serveur.\x1b[0m');
+      xtermRef.current.writeln('\x1b[33mSélectionnez un serveur pour commencer.\x1b[0m');
+      xtermRef.current.writeln('');
+    }
     
-    xtermRef.current.clear();
-    xtermRef.current.writeln('\x1b[1;31mDéconnecté du serveur.\x1b[0m');
-    xtermRef.current.writeln('\x1b[33mSélectionnez un serveur pour commencer.\x1b[0m');
-    xtermRef.current.writeln('');
     setIsConnected(false);
     setSelectedServer(null);
   };
