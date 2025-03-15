@@ -1,6 +1,6 @@
 // app/components/steps/InstanceSelectionStep.tsx
 import { FaFolder, FaArrowLeft, FaArrowRight } from 'react-icons/fa';
-import { Instance, FormData } from '../../../types';
+import { Instance, FormData } from '@/types';
 
 interface InstanceSelectionStepProps {
   instances: Instance[];

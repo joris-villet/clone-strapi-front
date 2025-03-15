@@ -1,18 +1,16 @@
-// app/page.tsx
-"use client";
+'use client';
 
 import { useState } from 'react';
-import { FaTerminal, FaCopy, FaCheckCircle } from 'react-icons/fa';
-import { StepperHeader } from './components/StepperHeader';
-import { TerminalDisplay } from '../components/TerminalDisplay';
-import { ConnectionStep } from './components/steps/ConnectionStep';
-import { InstanceSelectionStep } from './components/steps/InstanceSelectionStep';
-import ServerConfigStep from './components/steps/ServerConfigStep';
-import { VerificationStep } from './components/steps/VerificationStep';
-import { FormData, Instance } from '../../types/deploy'; // Ensure this path is correct and the file exists
+import { FaTerminal, FaCheckCircle, FaCopy } from 'react-icons/fa';
+import { StepperHeader } from '@/app/deploy/components/StepperHeader';
+import { TerminalDisplay } from '@/app/deploy/components/TerminalDisplay';
+import { ConnectionStep } from '@/app/deploy/components/steps/ConnectionStep';
+import { InstanceSelectionStep } from '@/app/deploy/components/steps/InstanceSelectionStep';
+import { ServerConfigStep } from '@/app/deploy/components/steps/ServerConfigStep';
+import { VerificationStep } from '@/app/deploy/components/steps/VerificationStep';
+import { FormData, Instance } from '@/app/deploy/types';
 
-
-export default function Page() {
+export default function DeployPage() {
   // États
   const [step, setStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -159,21 +157,6 @@ export default function Page() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Réinitialiser le formulaire
-  const resetForm = () => {
-    setFormData({
-      sourceInstance: '',
-      targetIP: '91.108.113.59',
-      targetPassword: 'Oskarek1973#',
-      domain: 'fabien.strapi-pro.com',
-      email: 'jc.meilland@idboats.com',
-      installPath: '/root/',
-    });
-    setStep(0);
-    setDeploymentSuccess(false);
-    setTerminalLogs([]);
   };
 
   return (

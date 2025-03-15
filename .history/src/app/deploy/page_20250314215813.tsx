@@ -2,15 +2,14 @@
 "use client";
 
 import { useState } from 'react';
-import { FaTerminal, FaCopy, FaCheckCircle } from 'react-icons/fa';
+import { FaTerminal } from 'react-icons/fa';
 import { StepperHeader } from './components/StepperHeader';
 import { TerminalDisplay } from '../components/TerminalDisplay';
 import { ConnectionStep } from './components/steps/ConnectionStep';
 import { InstanceSelectionStep } from './components/steps/InstanceSelectionStep';
 import ServerConfigStep from './components/steps/ServerConfigStep';
 import { VerificationStep } from './components/steps/VerificationStep';
-import { FormData, Instance } from '../../types/deploy'; // Ensure this path is correct and the file exists
-
+import { FormData, Instance } from './app/types';
 
 export default function Page() {
   // États

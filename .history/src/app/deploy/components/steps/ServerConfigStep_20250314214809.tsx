@@ -1,5 +1,4 @@
 // app/deploy/components/steps/ServerConfigStep.tsx
-"use client";
 import React, { useState } from 'react';
 import { FaServer } from 'react-icons/fa';
 import { FormData } from '@/app/types';
@@ -172,82 +171,66 @@ function ServerConfigStep({
       </button>
 
       {/* Affichage des informations du serveur */}
-{targetServerConnected && targetConnectionStatus && (
-  <div className="mt-6 p-6 bg-white rounded-lg shadow-md border border-gray-200">
-    <h4 className="text-lg font-semibold text-blue-600 mb-4">État du serveur cible</h4>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      
-      {/* Connexion SSH */}
-      <div className="flex items-center">
-        <span className="font-medium text-gray-700">Connexion SSH :</span>
-        <span
-          className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${
-            targetConnectionStatus.sshConnection
-              ? 'bg-green-100 text-green-700'
-              : 'bg-red-100 text-red-700'
-          }`}
-        >
-          {targetConnectionStatus.sshConnection ? 'Établie' : 'Non établie'}
-        </span>
-      </div>
+      {targetServerConnected && targetConnectionStatus && (
+        <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+          <h4 className="font-medium text-green-700 mb-4">État du serveur cible</h4>
+          <div className="space-y-4">
+            {/* Statut SSH */}
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Connexion SSH :</span>
+              {targetConnectionStatus.sshConnection ? (
+                <span className="text-green-600 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                  </svg>
+                  Établie
+                </span>
+              ) : (
+                <span className="text-red-600 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
+                  </svg>
+                  Non établie
+                </span>
+              )}
+            </div>
 
-      {/* Accès root */}
-      <div className="flex items-center">
-        <span className="font-medium text-gray-700">Accès root :</span>
-        <span
-          className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${
-            targetConnectionStatus.rootAccess
-              ? 'bg-green-100 text-green-700'
-              : 'bg-red-100 text-red-700'
-          }`}
-        >
-          {targetConnectionStatus.rootAccess ? 'Disponible' : 'Non disponible'}
-        </span>
-      </div>
+            {/* Accès root */}
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Accès root :</span>
+              {targetConnectionStatus.rootAccess ? (
+                <span className="text-green-600 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                  </svg>
+                  Disponible
+                </span>
+              ) : (
+                <span className="text-red-600 flex items-center gap-1">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
+                  </svg>
+                  Non disponible
+                </span>
+              )}
+            </div>
 
-      {/* Espace disque */}
-      <div className="col-span-1 md:col-span-2">
-        <span className="font-medium text-gray-700">Espace disque :</span>
-        <div className="mt-2 p-2 bg-gray-50 rounded-md font-mono text-xs overflow-x-auto">
-          <table className="min-w-full text-left">
-            <thead>
-              <tr className="text-gray-600">
-                <th className="pr-4 py-1">Filesystem</th>
-                <th className="pr-4 py-1">Size</th>
-                <th className="pr-4 py-1">Used</th>
-                <th className="pr-4 py-1">Avail</th>
-                <th className="pr-4 py-1">Use%</th>
-                <th className="pr-4 py-1">Mounted on</th>
-              </tr>
-            </thead>
-            <tbody>
-              {targetConnectionStatus.diskSpace.split('\n').map((line, index) => {
-                const cells = line.split(/\s+/).filter(Boolean);
-                return (
-                  <tr key={index} className={index === 0 ? 'text-gray-600' : ''}>
-                    {cells.map((cell, cellIndex) => (
-                      <td key={cellIndex} className="pr-4 py-1">
-                        {cell}
-                      </td>
-                    ))}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+            {/* Espace disque */}
+            <div>
+              <span className="font-medium">Espace disque :</span>
+              {formatDiskSpace(targetConnectionStatus.diskSpace)}
+            </div>
+
+            {/* Système */}
+            <div className="flex items-center gap-2">
+              <span className="font-medium">Système :</span>
+              <span className="px-3 py-1 bg-gray-100 rounded-full text-gray-700">
+                {formatSystemInfo(targetConnectionStatus.systemInfo)}
+              </span>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* Système */}
-      <div className="flex items-center">
-        <span className="font-medium text-gray-700">Système :</span>
-        <span className="ml-2 px-3 py-1 bg-gray-100 rounded-full text-gray-700 text-sm">
-          {formatSystemInfo(targetConnectionStatus.systemInfo)}
-        </span>
-      </div>
-    </div>
-  </div>
-)}
+      )}
 
       {/* Boutons de navigation */}
       <div className="flex justify-between mt-6">
@@ -296,5 +279,3 @@ function App() {
     />
   );
 }
-
-export default ServerConfigStep;

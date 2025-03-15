@@ -1,8 +1,7 @@
 // app/deploy/components/steps/ServerConfigStep.tsx
-"use client";
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { FaServer } from 'react-icons/fa';
-import { FormData } from '@/app/types';
+import { FormData } from '@/app/deploy/types';
 
 interface ServerConfigStepProps {
   formData: FormData;
@@ -22,7 +21,7 @@ interface ConnectionStatus {
   systemInfo: string;
 }
 
-function ServerConfigStep({
+export function ServerConfigStep({
   formData,
   setFormData,
   showTargetPassword,
@@ -35,34 +34,6 @@ function ServerConfigStep({
   const [targetConnectionInProgress, setTargetConnectionInProgress] = useState(false);
   const [targetServerConnected, setTargetServerConnected] = useState(false);
   const [targetConnectionStatus, setTargetConnectionStatus] = useState<ConnectionStatus | null>(null);
-
-  const formatDiskSpace = (diskSpace: string) => {
-    const lines = diskSpace.split('\n');
-    return (
-      <div className="mt-2 p-2 bg-gray-50 rounded-md font-mono text-xs overflow-x-auto">
-        <table className="min-w-full">
-          <tbody>
-            {lines.map((line, index) => {
-              const cells = line.split(/\s+/).filter(Boolean);
-              return (
-                <tr key={index} className={index === 0 ? "text-gray-600" : ""}>
-                  {cells.map((cell, cellIndex) => (
-                    <td key={cellIndex} className="pr-4 py-1">
-                      {cell}
-                    </td>
-                  ))}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    );
-  };
-
-  const formatSystemInfo = (systemInfo: string) => {
-    return systemInfo.replace('PRETTY_NAME=', '').replace(/"/g, '');
-  };
 
   const connectToTargetServer = async () => {
     setTargetConnectionInProgress(true);
@@ -97,8 +68,6 @@ function ServerConfigStep({
   return (
     <div className="flex flex-col gap-6">
       <h3 className="text-xl font-bold text-blue-600">Configuration du serveur cible</h3>
-
-      {/* Formulaire de configuration */}
       <div className="flex flex-col gap-4">
         <div>
           <label className="text-sm font-medium text-gray-700">IP du serveur cible</label>
@@ -111,7 +80,6 @@ function ServerConfigStep({
               value={formData.targetIP}
               onChange={(e) => setFormData({ ...formData, targetIP: e.target.value })}
               className="pl-10 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Entrez l'IP du serveur cible"
             />
           </div>
         </div>
@@ -123,8 +91,6 @@ function ServerConfigStep({
             value={formData.targetPassword}
             onChange={(e) => setFormData({ ...formData, targetPassword: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            title="Mot de passe"
-            placeholder="Entrez le mot de passe"
           />
           <button
             type="button"
@@ -142,8 +108,6 @@ function ServerConfigStep({
             value={formData.domain}
             onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            title="Domaine"
-            placeholder="Entrez le domaine"
           />
         </div>
 
@@ -154,13 +118,10 @@ function ServerConfigStep({
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            title="Email"
-            placeholder="Entrez votre email"
           />
         </div>
       </div>
 
-      {/* Bouton de connexion */}
       <button
         onClick={connectToTargetServer}
         disabled={targetConnectionInProgress}
@@ -171,85 +132,30 @@ function ServerConfigStep({
         {targetConnectionInProgress ? 'Connexion en cours...' : 'Tester la connexion'}
       </button>
 
-      {/* Affichage des informations du serveur */}
-{targetServerConnected && targetConnectionStatus && (
-  <div className="mt-6 p-6 bg-white rounded-lg shadow-md border border-gray-200">
-    <h4 className="text-lg font-semibold text-blue-600 mb-4">État du serveur cible</h4>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      
-      {/* Connexion SSH */}
-      <div className="flex items-center">
-        <span className="font-medium text-gray-700">Connexion SSH :</span>
-        <span
-          className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${
-            targetConnectionStatus.sshConnection
-              ? 'bg-green-100 text-green-700'
-              : 'bg-red-100 text-red-700'
-          }`}
-        >
-          {targetConnectionStatus.sshConnection ? 'Établie' : 'Non établie'}
-        </span>
-      </div>
-
-      {/* Accès root */}
-      <div className="flex items-center">
-        <span className="font-medium text-gray-700">Accès root :</span>
-        <span
-          className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${
-            targetConnectionStatus.rootAccess
-              ? 'bg-green-100 text-green-700'
-              : 'bg-red-100 text-red-700'
-          }`}
-        >
-          {targetConnectionStatus.rootAccess ? 'Disponible' : 'Non disponible'}
-        </span>
-      </div>
-
-      {/* Espace disque */}
-      <div className="col-span-1 md:col-span-2">
-        <span className="font-medium text-gray-700">Espace disque :</span>
-        <div className="mt-2 p-2 bg-gray-50 rounded-md font-mono text-xs overflow-x-auto">
-          <table className="min-w-full text-left">
-            <thead>
-              <tr className="text-gray-600">
-                <th className="pr-4 py-1">Filesystem</th>
-                <th className="pr-4 py-1">Size</th>
-                <th className="pr-4 py-1">Used</th>
-                <th className="pr-4 py-1">Avail</th>
-                <th className="pr-4 py-1">Use%</th>
-                <th className="pr-4 py-1">Mounted on</th>
-              </tr>
-            </thead>
-            <tbody>
-              {targetConnectionStatus.diskSpace.split('\n').map((line, index) => {
-                const cells = line.split(/\s+/).filter(Boolean);
-                return (
-                  <tr key={index} className={index === 0 ? 'text-gray-600' : ''}>
-                    {cells.map((cell, cellIndex) => (
-                      <td key={cellIndex} className="pr-4 py-1">
-                        {cell}
-                      </td>
-                    ))}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+      {targetServerConnected && targetConnectionStatus && (
+        <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+          <h4 className="font-medium text-green-700 mb-2">État du serveur cible</h4>
+          <div className="space-y-2 text-sm">
+            <p>
+              <span className="font-medium">Accès root :</span>{' '}
+              {targetConnectionStatus.rootAccess ? (
+                <span className="text-green-600">Disponible</span>
+              ) : (
+                <span className="text-red-600">Non disponible</span>
+              )}
+            </p>
+            <p>
+              <span className="font-medium">Espace disque :</span>{' '}
+              <span className="font-mono">{targetConnectionStatus.diskSpace}</span>
+            </p>
+            <p>
+              <span className="font-medium">Système :</span>{' '}
+              <span>{targetConnectionStatus.systemInfo}</span>
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* Système */}
-      <div className="flex items-center">
-        <span className="font-medium text-gray-700">Système :</span>
-        <span className="ml-2 px-3 py-1 bg-gray-100 rounded-full text-gray-700 text-sm">
-          {formatSystemInfo(targetConnectionStatus.systemInfo)}
-        </span>
-      </div>
-    </div>
-  </div>
-)}
-
-      {/* Boutons de navigation */}
       <div className="flex justify-between mt-6">
         <button
           onClick={() => setStep(1)}
@@ -270,31 +176,3 @@ function ServerConfigStep({
     </div>
   );
 }
-
-// Pour la démo
-function App() {
-  const [formData, setFormData] = React.useState({
-    targetIP: '91.108.113.59',
-    targetPassword: 'password123',
-    domain: 'example.com',
-    email: 'test@example.com',
-    sourceInstance: '',
-    installPath: ''
-  });
-  const [showTargetPassword, setShowTargetPassword] = React.useState(false);
-
-  return (
-    <ServerConfigStep
-      formData={formData}
-      setFormData={setFormData}
-      showTargetPassword={showTargetPassword}
-      setShowTargetPassword={setShowTargetPassword}
-      validateIP={() => true}
-      validateDomain={() => true}
-      validateEmail={() => true}
-      setStep={() => {}}
-    />
-  );
-}
-
-export default ServerConfigStep;
