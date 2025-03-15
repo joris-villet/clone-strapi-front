@@ -12,9 +12,21 @@ interface Server {
 }
 
 // URL de base de l'API
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+// const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
 export async function addServer(newServer: Omit<Server, 'id'>): Promise<Server> {
-  const response = await axios.post(`${API_URL}/servers`, newServer);
+  const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/servers`, newServer);
   return response.data;
+}
+
+
+export async function testServer(newServer: Omit<Server, 'id'>) {
+  try {
+    const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/ssh/test-connection`, newServer);
+    return data;
+  }
+  catch(err) {
+    console.log(err)
+    return err;
+  }
 }

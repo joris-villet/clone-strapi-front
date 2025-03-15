@@ -47,31 +47,43 @@ export default function TerminalPage() {
   }, []);
 
   // Fonction pour ajouter un nouveau serveur
-  const addServer = async (newServer: Omit<Server, 'id'>) => {
+  const addServer = async (newServer: Omit<Server, 'id'>, connexionVerified: boolean) => {
     
-    console.log('new server => ', newServer);
-    
-    try {
-      setLoading(true);
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/servers`, newServer);
-      setServers((prev) => [...prev, response.data]);
-      setError(null);
-    } catch (err) {
-      console.error('Erreur lors de l\'ajout du serveur:', err);
-      setError('Impossible d\'ajouter le serveur. Vérifiez que le backend est en cours d\'exécution.');
-      
-      // En mode développement, simuler l'ajout si le backend n'est pas disponible
-      // if (process.env.NODE_ENV === 'development') {
-      //   const mockServer = {
-      //     ...newServer,
-      //     id: Date.now().toString(),
-      //   };
-      //   setServers((prev) => [...prev, mockServer]);
-      // }
+    // console.log('new server => ', newServer);
 
-    } finally {
-      setLoading(false);
+
+    try {
+      // setLoading(true);
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/servers`, {
+        ...newServer,
+        connexionVerified
+      });
+      setServers((prev) => [...prev, response.data]);
+    } catch(err) {
+      console.error('Erreur lors de l\'ajout du serveur:', err);
     }
+
+    // try {
+    //   setLoading(true);
+    //   const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/servers`, newServer);
+    //   setServers((prev) => [...prev, response.data]);
+    //   setError(null);
+    // } catch (err) {
+    //   console.error('Erreur lors de l\'ajout du serveur:', err);
+    //   setError('Impossible d\'ajouter le serveur. Vérifiez que le backend est en cours d\'exécution.');
+      
+    //   // En mode développement, simuler l'ajout si le backend n'est pas disponible
+    //   if (process.env.NODE_ENV === 'development') {
+    //     const mockServer = {
+    //       ...newServer,
+    //       id: Date.now().toString(),
+    //     };
+    //     setServers((prev) => [...prev, mockServer]);
+    //   }
+
+    // } finally {
+    //   setLoading(false);
+    // }
   };
 
   return (
@@ -94,12 +106,12 @@ export default function TerminalPage() {
       <TerminalForm onAddServer={addServer} />
       
       {/* Afficher un indicateur de chargement */}
-      {loading && (
+      {/* {loading && (
         <div className="my-4 flex items-center justify-center">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
           <span className="ml-2 text-gray-300">Chargement des serveurs...</span>
         </div>
-      )}
+      )} */}
       
       {/* Liste des serveurs et terminal */}
       <Terminal servers={servers} />

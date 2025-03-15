@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useState } from 'react';
+import { testServer } from '../api/servers';
+import { TiInputChecked } from "react-icons/ti";
+import { ImCross } from "react-icons/im";
 
 interface ServerFormData {
   name: string;      // Nouveau champ pour le nom du serveur
@@ -8,21 +11,26 @@ interface ServerFormData {
   password: string;
   ip: string;
   port: string;
+  connexionVerified: boolean;
   rsaKey: string;
 }
 
 interface TerminalFormProps {
-  onAddServer: (server: ServerFormData) => void;
+  onAddServer: (server: ServerFormData, connexionVerified: boolean) => void;
 }
 
 const TerminalForm: React.FC<TerminalFormProps> = ({ onAddServer }) => {
   const [isFormVisible, setIsFormVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [serverIsVerified, setServerIsVerified] = useState(false);
+  const [serverWrong, setServerWrong] = useState(false);
   const [newInstance, setNewInstance] = useState<ServerFormData>({
     name: '',        // Initialisation du nom
     username: '',
     password: '',
     ip: '',
-    port: '',      // Port SSH par défaut
+    port: '',
+    connexionVerified: false,
     rsaKey: '',
   });
 
@@ -34,18 +42,48 @@ const TerminalForm: React.FC<TerminalFormProps> = ({ onAddServer }) => {
     }));
   };
 
-  const addInstance = (e: React.FormEvent) => {
+  const addInstance = async (e: React.FormEvent) => {
     e.preventDefault();
-    onAddServer(newInstance);
+
+    setLoading(true)
+
+    const result = await testServer(newInstance)
+
+    console.log('result => ', result)
+
+    if (!!result.success) {
+
+      setServerIsVerified(true);
+
+      onAddServer(newInstance, true);
+      
+      setLoading(false);
+      
+      setTimeout(() => {
+        setServerIsVerified(false);
+        setIsFormVisible(false);
+      }, 2000);
+
+    } else {
+      setLoading(false);
+      setServerWrong(true);
+
+      setTimeout(() => {
+        setServerWrong(false);
+        // setIsFormVisible(false);
+      }, 2000);
+      return;
+    }
+
     setNewInstance({
-      name: '',      
+      name: '',
       username: '',
       password: '',
       ip: '',
       port: '',
+      connexionVerified: false,
       rsaKey: '',
     });
-    setIsFormVisible(false);
   };
 
   return (
@@ -72,9 +110,8 @@ const TerminalForm: React.FC<TerminalFormProps> = ({ onAddServer }) => {
 
       {/* Formulaire qui s'affiche/se masque */}
       <div
-        className={`overflow-hidden transition-all duration-500 ease-in-out ${
-          isFormVisible ? 'max-h-[500px] opacity-100 transform translate-y-0' : 'max-h-0 opacity-0 transform -translate-y-4'
-        }`}
+        className={`overflow-hidden transition-all duration-500 ease-in-out ${isFormVisible ? 'max-h-[500px] opacity-100 transform translate-y-0' : 'max-h-0 opacity-0 transform -translate-y-4'
+          }`}
       >
         <div className="p-4">
           <form onSubmit={addInstance}>
@@ -94,7 +131,7 @@ const TerminalForm: React.FC<TerminalFormProps> = ({ onAddServer }) => {
                   required
                 />
               </div>
-              
+
               {/* Username */}
               <div>
                 <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-1">
@@ -190,6 +227,24 @@ const TerminalForm: React.FC<TerminalFormProps> = ({ onAddServer }) => {
             </button>
           </form>
         </div>
+        {loading && (
+          <div className="my-4 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+            <span className="ml-2 text-gray-300">Vérification du serveur...</span>
+          </div>
+        )}
+        {serverIsVerified && (
+          <div className="my-4 flex items-center justify-center">
+            <TiInputChecked color='#4ff554' size={30} />
+            <span className="ml-2 text-gray-300">Serveur vérifié</span>
+          </div>
+        )}
+        {serverWrong && (
+          <div className="my-4 flex items-center justify-center">
+            <ImCross color='red' size={30} />
+            <span className="ml-2 text-gray-300">Serveur non trouvé</span>
+          </div>
+        )}
       </div>
     </div>
   );
