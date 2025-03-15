@@ -59,7 +59,7 @@ interface Server {
 }
 
 // URL de base de l'API
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'http://localhost:4000/api';
 
 export default function TerminalPage() {
   const [servers, setServers] = useState<Server[]>([]);
@@ -71,7 +71,7 @@ export default function TerminalPage() {
     const fetchServers = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API_URL}/servers`);
+        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/servers`);
         setServers(response.data);
         setError(null);
       } catch (err) {
