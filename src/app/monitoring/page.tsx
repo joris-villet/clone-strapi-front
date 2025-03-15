@@ -84,12 +84,15 @@ export default function Monitoring() {
       const { data } = await axios.get<Instance[]>(`/api/instances`);
   
       setInstances((prev) => {
-        // Fusionner les nouvelles données avec les anciennes
         const updatedInstances = data.map((newInstance) => {
           const existingInstance = prev.find((instance) => instance.id === newInstance.id);
           return existingInstance
-            ? { ...existingInstance, ...newInstance } // Conserver l'historique et autres données locales
-            : { ...newInstance, statusHistory: JSON.stringify([]) }; // Initialiser l'historique pour les nouvelles instances
+            ? { ...existingInstance, ...newInstance }
+            : {
+                ...newInstance,
+                status: "pending", // Initialiser le statut à "pending"
+                statusHistory: JSON.stringify([]), // Initialiser l'historique
+              };
         });
   
         return updatedInstances;
@@ -118,7 +121,7 @@ export default function Monitoring() {
     try {
       const instanceToSend = {
         ...newInstance,
-        status: 'pending',
+        status: "pending", // Initialiser le statut à "pending"
         statusHistory: JSON.stringify([]),
       };
   
@@ -129,17 +132,18 @@ export default function Monitoring() {
         ...prev,
         {
           ...data, // Les données renvoyées par le backend
+          status: "pending", // Initialiser le statut à "pending"
           statusHistory: JSON.stringify([]), // Initialiser l'historique
         },
       ]);
   
-      setNewInstance({ name: '', url: '', interval: 60 });
+      setNewInstance({ name: "", url: "", interval: 60 });
   
-      showToast('Succès', 'Instance ajoutée avec succès', 'success');
+      showToast("Succès", "Instance ajoutée avec succès", "success");
     } catch (error: any) {
-      console.error('Erreur lors de l\'ajout de l\'instance:', error);
+      console.error("Erreur lors de l'ajout de l'instance:", error);
       setError(`Erreur lors de l'ajout de l'instance: ${error.message}`);
-      showToast('Erreur', error.message || 'Erreur lors de l\'ajout de l\'instance', 'error', 5000);
+      showToast("Erreur", error.message || "Erreur lors de l'ajout de l'instance", "error", 5000);
     } finally {
       setIsLoading(false);
     }
@@ -169,57 +173,25 @@ export default function Monitoring() {
     }
   };
 
-  // const monitorInstance = async (id: string, url: string) => {
-  //   //setIsLoading(true);
-
-  //   try {
-  //     const { data } = await axios.post(`/api/monitoring`, { id, url });
-  //     console.log('color ==> ', data.color)
-
-  //     setStatusLabelColor(data.color);
-
-  //     await fetchInstances();
-
-  //   } catch (error: any) {
-  //     console.error('Erreur de monitoring:', error);
-  //   } finally {
-  //     //setIsLoading(false);
-  //   }
-  // };
-
-  // const monitorInstance = async (id: string, url: string) => {
-  //   try {
-  //     const { data } = await axios.post(`/api/monitoring`, { id, url });
-
-  //     // Mettre à jour l'instance spécifique avec sa couleur
-  //     setInstances(prev => prev.map(instance =>
-  //       instance.id === id ? { ...instance, color: data.color, status: data.status } : instance
-  //     ));
-
-  //   } catch (error: any) {
-  //     console.error('Erreur de monitoring:', error);
-  //   }
-  // };
-
 
 
   const monitorInstance = async (id: string, url: string) => {
     try {
       const { data } = await axios.post(`/api/monitoring`, { id, url });
-  
+
       // Mettre à jour l'instance spécifique avec sa couleur et son historique
       setInstances((prev) =>
         prev.map((instance) =>
           instance.id === id
             ? {
-                ...instance,
-                color: data.color,
-                status: data.status,
-                statusHistory: JSON.stringify([
-                  ...(JSON.parse(instance.statusHistory || "[]") || []), // Conserver l'historique existant
-                  { color: data.color }, // Ajouter la nouvelle couleur
-                ].slice(-10)), // Limiter à 10 éléments
-              }
+              ...instance,
+              color: data.color,
+              status: data.status,
+              statusHistory: JSON.stringify([
+                ...(JSON.parse(instance.statusHistory || "[]") || []), // Conserver l'historique existant
+                { color: data.color }, // Ajouter la nouvelle couleur
+              ].slice(-10)), // Limiter à 10 éléments
+            }
             : instance
         )
       );
@@ -268,10 +240,10 @@ export default function Monitoring() {
       console.error("Erreur lors du parsing de l'historique :", error);
       return null;
     }
-  
+
     // Limiter à 10 éléments
     const limitedHistory = parsedHistory.slice(-10); // Prend les 10 derniers éléments
-  
+
     return (
       <div className="flex space-x-1">
         {limitedHistory.map((key: { color: string }, index: number) => (
@@ -343,15 +315,15 @@ export default function Monitoring() {
               </button>
             </a> */}
 
-              <Link
+              {/* <Link
                 href="/deploy"
                 className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded inline-block"
               >
                 Déployer Strapi
-              </Link>
+              </Link> */}
 
               <button
-                className="border border-blue-500 text-blue-500 hover:bg-blue-50 px-4 py-2 rounded flex items-center gap-2"
+                className="border border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white cursor-pointer px-4 py-2 rounded flex items-center gap-2"
                 onClick={fetchInstances}
                 disabled={isLoading}
               >
@@ -427,7 +399,7 @@ export default function Monitoring() {
               <button
                 type="button"
                 onClick={() => setIsFormVisible(!isFormVisible)}
-                className="text-gray-300 hover:text-white transition-colors bg-blue-500 rounded-md shadow-2xl p-0.5"
+                className="text-gray-300 hover:text-white transition-colors bg-blue-500 cursor-pointer rounded-md shadow-2xl p-1"
                 aria-expanded={isFormVisible}
               >
                 <svg
@@ -554,13 +526,24 @@ export default function Monitoring() {
                           <div className="flex items-center space-x-2">
                             <span className="font-bold truncate text-white">{instance.name}</span>
                           </div>
-                         
-                          <span
+
+                          {/* <span
                             className="text-xs px-2 py-1 rounded-full shadow-2xs text-gray-800 font-bold"
                             style={{ backgroundColor: instance.color || '#cccccc' }}
                           >
                             {instance.status}
+                          </span> */}
+
+                          <span
+                            className="text-xs px-2 py-1 rounded-full shadow-2xs font-bold"
+                            style={{
+                              backgroundColor: instance.status === "pending" ? "#f0ad4e" : instance.color || "#cccccc", // Couleur orange pour "pending"
+                              color: instance.status === "pending" ? "#ffffff" : "#000000", // Texte blanc pour "pending"
+                            }}
+                          >
+                            {instance.status === "pending" ? "pending..." : instance.status}
                           </span>
+
                         </div>
 
                         <div className="text-gray-600 text-sm mb-2 truncate">
