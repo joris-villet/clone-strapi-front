@@ -1,12 +1,12 @@
 
-
 'use client';
 
-import React, { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react';
 import axios from 'axios';
+import React, { useState, useEffect, useRef, ChangeEvent, FormEvent } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import RenderStatusHistory from '../components/RenderStatusHistory';
+import MonitoringModal from '../components/MonitoringModal';
 import type { Instance, ErrorData } from '../../interfaces';
 
 export default function Monitoring() {
@@ -23,6 +23,8 @@ export default function Monitoring() {
   const [errorModalOpen, setErrorModalOpen] = useState<boolean>(false);
   const [currentError, setCurrentError] = useState<ErrorData | null>(null);
   const [statusLabelColor, setStatusLabelColor] = useState<string>('');
+  const [modalIsActive, setModalIsActive] = useState<boolean>(false);
+  const [selectedHistoryItem, setSelectedHistoryItem] = useState<{ instance: Instance; item: any; index: number; } | undefined>(undefined);
 
   const monitoringTimers = useRef<{ [key: string]: NodeJS.Timeout }>({});
 
@@ -113,22 +115,23 @@ export default function Monitoring() {
   };
 
   const handleStatus = (currentInstance: Instance) => {
-    setCurrentError({
-      statusCode: currentInstance.statusCode || 0,
-      statusText: currentInstance.statusText || '',
-      url: currentInstance.url,
-      date: new Date().toISOString(),
-      status: currentInstance.status,
-    });
-    setErrorModalOpen(true);
+    setModalIsActive(true);
+    // setCurrentError({
+    //   statusCode: currentInstance.statusCode || 0,
+    //   statusText: currentInstance.statusText || '',
+    //   url: currentInstance.url,
+    //   date: new Date().toISOString(),
+    //   status: currentInstance.status,
+    // });
+    // setErrorModalOpen(true);
 
-    currentInstance.status === 'offline'
-      ? toast.error(`${currentInstance.statusText} ${currentInstance.statusCode}`, {
-        autoClose: 5000
-      })
-      : toast.success(`${currentInstance.statusText} ${currentInstance.statusCode}`, {
-        autoClose: 2000
-      });
+    // currentInstance.status === 'offline'
+    //   ? toast.error(`${currentInstance.statusText} ${currentInstance.statusCode}`, {
+    //     autoClose: 5000
+    //   })
+    //   : toast.success(`${currentInstance.statusText} ${currentInstance.statusCode}`, {
+    //     autoClose: 2000
+    //   });
   };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -164,12 +167,14 @@ export default function Monitoring() {
         position="top-right"
         autoClose={5000}
         hideProgressBar={false}
-        newestOnTop
-        closeOnClick
+        newestOnTop={false}
+        closeOnClick={false}
         rtl={false}
         pauseOnFocusLoss
         draggable
         pauseOnHover
+        theme="dark"
+        // transition={Bounce}
       />
 
       <div className="container mx-auto px-4 py-6 max-w-7xl relative">
@@ -197,18 +202,6 @@ export default function Monitoring() {
               </div>
             </div>
 
-            {/* Toast notification container */}
-            <ToastContainer
-              position="top-right"
-              autoClose={5000}
-              hideProgressBar={false}
-              newestOnTop={true}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-            />
 
             {/* Affichage des erreurs de connexion */}
             {error && (
@@ -364,13 +357,6 @@ export default function Monitoring() {
                               <span className="font-bold truncate text-white">{instance.name}</span>
                             </div>
 
-                            {/* <span
-                            className="text-xs px-2 py-1 rounded-full shadow-2xs text-gray-800 font-bold"
-                            style={{ backgroundColor: instance.color || '#cccccc' }}
-                          >
-                            {instance.status}
-                          </span> */}
-
                             <span
                               className="text-xs px-2 py-1 rounded-full shadow-2xs font-bold"
                               style={{
@@ -402,11 +388,17 @@ export default function Monitoring() {
                           </div>
 
                           {/* <div className="mb-4">
-                          {renderStatusHistory(instance.statusHistory, instance)}
-                        </div> */}
-
-                          <div className="mb-4">
                             {instance.statusHistory ? RenderStatusHistory(instance.statusHistory, instance) : null}
+                          </div> */}
+                          <div className="mb-4">
+                            {instance.statusHistory ?
+                              <RenderStatusHistory
+                                history={instance.statusHistory}
+                                instance={instance}
+                                onHistoryItemClick={() => handleStatus(instance)}
+                              />
+                              :
+                              null}
                           </div>
 
                           <div className="flex gap-2 mt-auto">
@@ -436,6 +428,13 @@ export default function Monitoring() {
                         </div>
                       </div>
                     ))}
+                    {modalIsActive &&
+                      <MonitoringModal
+                        instance={selectedHistoryItem?.instance || instances[0]}
+                        historyItem={selectedHistoryItem}
+                        onClick={() => setModalIsActive(false)}
+                      />
+                    }
                   </div>
                 )}
               </div>

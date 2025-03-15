@@ -48,9 +48,12 @@ export default function TerminalPage() {
 
   // Fonction pour ajouter un nouveau serveur
   const addServer = async (newServer: Omit<Server, 'id'>) => {
+    
+    console.log('new server => ', newServer);
+    
     try {
       setLoading(true);
-      const response = await axios.post(`${API_URL}/servers`, newServer);
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/servers`, newServer);
       setServers((prev) => [...prev, response.data]);
       setError(null);
     } catch (err) {
@@ -58,13 +61,14 @@ export default function TerminalPage() {
       setError('Impossible d\'ajouter le serveur. Vérifiez que le backend est en cours d\'exécution.');
       
       // En mode développement, simuler l'ajout si le backend n'est pas disponible
-      if (process.env.NODE_ENV === 'development') {
-        const mockServer = {
-          ...newServer,
-          id: Date.now().toString(),
-        };
-        setServers((prev) => [...prev, mockServer]);
-      }
+      // if (process.env.NODE_ENV === 'development') {
+      //   const mockServer = {
+      //     ...newServer,
+      //     id: Date.now().toString(),
+      //   };
+      //   setServers((prev) => [...prev, mockServer]);
+      // }
+
     } finally {
       setLoading(false);
     }
