@@ -75,9 +75,7 @@ export async function DELETE(request: Request) {
     }
 
     // Effectuer une requête DELETE vers votre backend Express
-    const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/instance`, {
-      params: { id },
-    });
+    const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/instance/${id}`);
 
     // Retourner la réponse du backend Express
     return NextResponse.json(response.data, { status: response.status });

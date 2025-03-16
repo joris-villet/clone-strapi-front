@@ -82,9 +82,16 @@ export default function Monitoring() {
     setError(null);
 
     try {
-      await axios.delete(`/api/instances`, { params: { id } });
+      // await axios.delete(`/api/instances`, { params: { id } });
+      const { data } = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/instance`, {
+        params: { id },
+      });
+
+      console.log('instance delete => ', data);
+
       await fetchInstances();
       toast.success('Instance supprimée avec succès');
+
     } catch (error: any) {
       console.error('Erreur lors de la suppression de l\'instance:', error);
       setError(`Erreur lors de la suppression: ${error.message}`);
@@ -218,7 +225,7 @@ export default function Monitoring() {
 
             {/* Formulaire d'ajout */}
 
-            <div className="rounded-lg shadow-sm bg-[#2C3E50]/40 backdrop-blur-sm border border-white/10">
+            <div className="rounded-lg shadow-sm bg-[#11111666]/40 backdrop-blur-sm border border-white/10">
 
 
               <div className="p-4 border-b border-white/10 flex justify-between items-center">
@@ -312,7 +319,7 @@ export default function Monitoring() {
             </div>
 
             {/* Liste des instances */}
-            <div className="rounded-lg shadow-sm bg-[#2C3E50]/40 backdrop-blur-sm border border-white/10">
+            <div className="rounded-lg shadow-sm bg-[#11111666]/40 backdrop-blur-sm border border-white/10">
               <div className="p-4 border-b">
                 <div className="flex justify-between items-center">
                   <h2 className="font-medium mb-4 text-gray-300 text-xl">Instances existantes</h2>

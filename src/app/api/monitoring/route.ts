@@ -49,7 +49,7 @@ export async function POST(req: Request) {
     // Étape 2: Récupérer l'historique des statuts depuis le backend
     let statusHistory = [];
     try {
-      //console.log(`${process.env.NEXT_PUBLIC_API_URL}/instance/${id}`);
+      console.log("adresse requete => ", `${process.env.NEXT_PUBLIC_API_URL}/instance/${id}`);
 
       const historyResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/instance/${id}`);
 

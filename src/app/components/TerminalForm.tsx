@@ -87,7 +87,7 @@ const TerminalForm: React.FC<TerminalFormProps> = ({ onAddServer }) => {
   };
 
   return (
-    <div className="rounded-lg shadow-sm bg-[#2C3E50]/40 backdrop-blur-sm border border-white/10">
+    <div className="rounded-lg shadow-sm bg-[#11111666]/40 backdrop-blur-sm border border-white/10">
       <div className="p-4 border-b border-white/10 flex justify-between items-center">
         <h2 className="font-bold text-gray-300 text-xl">Ajouter un serveur distant</h2>
         <button

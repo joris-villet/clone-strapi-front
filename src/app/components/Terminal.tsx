@@ -386,7 +386,7 @@ const Terminal: React.FC<TerminalProps> = ({ servers }) => {
 
   return (
     <div className="mt-6">
-      <div className="bg-[#2C3E50]/40 backdrop-blur-sm border border-white/10 rounded-lg shadow-sm">
+      <div className="bg-[#11111666]/40 backdrop-blur-sm border border-white/10 rounded-lg shadow-sm">
         <div className="p-4 border-b border-white/10 flex justify-between items-center">
           <h2 className="font-bold text-gray-300 text-xl">Terminal SSH</h2>
 

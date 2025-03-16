@@ -64,7 +64,7 @@ export default function TerminalPage() {
   };
 
   return (
-    <div>
+    <div className="mt-[4rem] container mx-auto max-w-7xl relative">
       <h1 className="text-2xl font-bold mb-4 text-gray-300">Terminal SSH</h1>
       
       {/* Afficher les erreurs */}
