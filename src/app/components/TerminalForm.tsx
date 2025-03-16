@@ -93,7 +93,7 @@ const TerminalForm: React.FC<TerminalFormProps> = ({ onAddServer }) => {
         <button
           type="button"
           onClick={() => setIsFormVisible(!isFormVisible)}
-          className="text-gray-300 hover:text-white transition-colors bg-blue-500 rounded-md shadow-2xl p-0.5"
+          className="text-gray-300 hover:text-white transition-colors bg-blue-500 rounded-md shadow-2xl p-0.5 cursor-pointer"
           aria-expanded={isFormVisible}
         >
           <svg

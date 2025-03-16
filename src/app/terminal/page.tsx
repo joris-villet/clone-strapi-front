@@ -4,40 +4,40 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import TerminalForm from '../components/TerminalForm';
 import Terminal from '../components/Terminal';
+import { useServerStore } from '../stores/servers';
 
-// Type pour un serveur
-interface Server {
-  id: string;
-  name: string;
-  username: string;
-  ip: string;
-  port: string;
-  rsaKey?: string;
-}
+import type { IServer } from '../../interfaces';
+
+
+
 
 // URL de base de l'API
-const API_URL = 'http://localhost:4000/api';
+// const API_URL = 'http://localhost:4000/api';
 
 export default function TerminalPage() {
-  const [servers, setServers] = useState<Server[]>([]);
+  // const [servers, setServers] = useState<Server[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const useServer = useServerStore();
 
   // Charger les serveurs depuis l'API
   useEffect(() => {
     const fetchServers = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/servers`);
-        setServers(response.data);
+        // const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/servers`);
+        useServer.fetchServers();
+        //setServers(response.data);
+        //useServer.servers(response.data)
         setError(null);
       } catch (err) {
         console.error('Erreur lors du chargement des serveurs:', err);
         setError('Impossible de charger les serveurs. Vérifiez que le backend est en cours d\'exécution.');
         // En mode développement, utilisez des données fictives si le backend n'est pas disponible
-        if (process.env.NODE_ENV === 'development') {
-          setServers([]);
-        }
+        // if (process.env.NODE_ENV === 'development') {
+        //   setServers([]);
+        // }
       } finally {
         setLoading(false);
       }
@@ -47,43 +47,20 @@ export default function TerminalPage() {
   }, []);
 
   // Fonction pour ajouter un nouveau serveur
-  const addServer = async (newServer: Omit<Server, 'id'>, connexionVerified: boolean) => {
+  const addServer = async (newServer: Omit<IServer, 'id'>) => {
     
-    // console.log('new server => ', newServer);
-
-
     try {
       // setLoading(true);
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/servers`, {
-        ...newServer,
-        connexionVerified
-      });
-      setServers((prev) => [...prev, response.data]);
+      useServer.addServer(newServer);
+      // const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/servers`, {
+      //   ...newServer,
+      //   connexionVerified
+      // });
+      //setServers((prev) => [...prev, response.data]);
     } catch(err) {
       console.error('Erreur lors de l\'ajout du serveur:', err);
     }
 
-    // try {
-    //   setLoading(true);
-    //   const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/servers`, newServer);
-    //   setServers((prev) => [...prev, response.data]);
-    //   setError(null);
-    // } catch (err) {
-    //   console.error('Erreur lors de l\'ajout du serveur:', err);
-    //   setError('Impossible d\'ajouter le serveur. Vérifiez que le backend est en cours d\'exécution.');
-      
-    //   // En mode développement, simuler l'ajout si le backend n'est pas disponible
-    //   if (process.env.NODE_ENV === 'development') {
-    //     const mockServer = {
-    //       ...newServer,
-    //       id: Date.now().toString(),
-    //     };
-    //     setServers((prev) => [...prev, mockServer]);
-    //   }
-
-    // } finally {
-    //   setLoading(false);
-    // }
   };
 
   return (
@@ -114,7 +91,7 @@ export default function TerminalPage() {
       )} */}
       
       {/* Liste des serveurs et terminal */}
-      <Terminal servers={servers} />
+      <Terminal servers={useServer.servers} />
     </div>
   );
 }

@@ -2,20 +2,24 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import axios from 'axios'
 import dynamic from 'next/dynamic';
 import type { Terminal as XTermType } from 'xterm';
 import type { FitAddon as FitAddonType } from 'xterm-addon-fit';
+import DeleteServerButton from './DeleteServerButton';
+import { useServerStore } from '../stores/servers';
+import type { IServer } from '@/interfaces';
 
-interface Server {
-  id: string;
-  name: string;
-  username: string;
-  ip: string;
-  port: string;
-}
+// interface Server {
+//   id: string;
+//   name: string;
+//   username: string;
+//   ip: string;
+//   port: string;
+// }
 
 interface TerminalProps {
-  servers: Server[];
+  servers: IServer[];
 }
 
 const Terminal: React.FC<TerminalProps> = ({ servers }) => {
@@ -28,6 +32,8 @@ const Terminal: React.FC<TerminalProps> = ({ servers }) => {
   const [terminalReady, setTerminalReady] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const dataListenerRef = useRef<{ dispose: () => void } | null>(null);
+
+  const useServer = useServerStore()
 
   // Vérifier si nous sommes côté client
   useEffect(() => {
@@ -46,7 +52,7 @@ const Terminal: React.FC<TerminalProps> = ({ servers }) => {
         // Puis les modules
         const xtermModule = await import('xterm');
         const fitAddonModule = await import('xterm-addon-fit');
-        
+
 
         const XTerm = xtermModule.Terminal;
         const FitAddon = fitAddonModule.FitAddon;
@@ -120,9 +126,6 @@ const Terminal: React.FC<TerminalProps> = ({ servers }) => {
         });
 
 
-
-
-
         // Ajouter l'addon pour ajuster la taille
         const fitAddon = new FitAddon();
         term.loadAddon(fitAddon);
@@ -191,158 +194,194 @@ const Terminal: React.FC<TerminalProps> = ({ servers }) => {
 
 
 
+  const handleDeleteServer = async (serverId: string) => {
+    try {
+      console.log(`Suppression du serveur avec l'ID: ${serverId}`);
+
+      const confirmDelete = window.confirm("Êtes-vous sûr de vouloir supprimer ce serveur ?");
+
+      if (!confirmDelete) {
+        return;
+      }
+
+      const success = await useServer.deleteServer(serverId);
+
+      if (success) {
+        console.log("Serveur supprimé avec succès");
+
+        // Rafraîchir la liste des serveurs
+        const updatedServers = await useServer.fetchServers();
 
 
+        // setServers(updatedServers);
 
-// Fonction connectToServer complète
-const connectToServer = () => {
-  if (!selectedServer || !xtermRef.current) return;
+        // Réinitialiser le serveur sélectionné s'il a été supprimé
+        if (selectedServer === serverId) {
+          setSelectedServer(null);
+        }
 
-  const server = servers.find(s => s.id === selectedServer);
-  if (!server) return;
-
-  xtermRef.current.clear();
-  xtermRef.current.writeln(`\x1b[1;32mConnexion à ${server.username}@${server.ip}:${server.port}...\x1b[0m`);
-
-  // Créer une connexion WebSocket
-  const ws = new WebSocket(process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:4000");
-  wsRef.current = ws;
-
-  ws.onopen = () => {
-    // Envoyer une demande de connexion au serveur SSH
-    ws.send(JSON.stringify({
-      type: 'connect',
-      serverId: server.id
-    }));
+        // Désactiver la connexion
+        setIsConnected(false);
+      } else {
+        // Gestion de l'erreur
+        alert("Erreur lors de la suppression du serveur");
+      }
+    } catch (error) {
+      console.error("Erreur lors de la suppression:", error);
+      alert("Une erreur est survenue lors de la suppression du serveur");
+    }
   };
 
-  ws.onmessage = (event) => {
-    const message = JSON.parse(event.data);
 
-    switch (message.type) {
-      case 'connected':
-        // Connexion établie
-        xtermRef.current?.writeln('\x1b[1;32mConnecté!\x1b[0m');
-        xtermRef.current?.writeln('');
-        setIsConnected(true);
-        
-        // Activer l'entrée utilisateur
-        if (xtermRef.current) {
-          xtermRef.current.options.disableStdin = false;
-          
-          // Supprimer l'ancien écouteur si présent
-          if (dataListenerRef.current) {
-            dataListenerRef.current.dispose();
-          }
-          
-          // Attacher le nouvel écouteur
-          dataListenerRef.current = xtermRef.current.onData((data) => {
-            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-              wsRef.current.send(JSON.stringify({
-                type: 'command',
-                command: data
-              }));
+  // Fonction connectToServer complète
+  const connectToServer = () => {
+    if (!selectedServer || !xtermRef.current) return;
+
+    const server = servers.find(s => s.id === selectedServer);
+    if (!server) return;
+
+    xtermRef.current.clear();
+    xtermRef.current.writeln(`\x1b[1;32mConnexion à ${server.username}@${server.ip}:${server.port}...\x1b[0m`);
+
+    // Créer une connexion WebSocket
+    const ws = new WebSocket(process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:4000");
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      // Envoyer une demande de connexion au serveur SSH
+      ws.send(JSON.stringify({
+        type: 'connect',
+        serverId: server.id
+      }));
+    };
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+
+      switch (message.type) {
+        case 'connected':
+          // Connexion établie
+          xtermRef.current?.writeln('\x1b[1;32mConnecté!\x1b[0m');
+          xtermRef.current?.writeln('');
+          setIsConnected(true);
+
+          // Activer l'entrée utilisateur
+          if (xtermRef.current) {
+            xtermRef.current.options.disableStdin = false;
+
+            // Supprimer l'ancien écouteur si présent
+            if (dataListenerRef.current) {
+              dataListenerRef.current.dispose();
             }
-          });
-          
-          // Configurer le gestionnaire de touches personnalisé pour Ctrl+C/V
-          xtermRef.current.attachCustomKeyEventHandler((event) => {
-            // Gérer Ctrl+V (coller)
-            if (event.type === 'keydown' && event.ctrlKey && event.key === 'v') {
-              event.preventDefault();
-              
-              navigator.clipboard.readText().then(text => {
-                if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-                  wsRef.current.send(JSON.stringify({
-                    type: 'command',
-                    command: text
-                  }));
-                }
-              });
-              
-              return false;
-            }
-            
-            // Gérer Ctrl+C (copier)
-            if (event.type === 'keydown' && event.ctrlKey && event.key === 'c') {
-              const selection = xtermRef.current?.getSelection();
-              
-              if (selection && selection.length > 0) {
-                navigator.clipboard.writeText(selection);
+
+            // Attacher le nouvel écouteur
+            dataListenerRef.current = xtermRef.current.onData((data) => {
+              if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.send(JSON.stringify({
+                  type: 'command',
+                  command: data
+                }));
+              }
+            });
+
+            // Configurer le gestionnaire de touches personnalisé pour Ctrl+C/V
+            xtermRef.current.attachCustomKeyEventHandler((event) => {
+              // Gérer Ctrl+V (coller)
+              if (event.type === 'keydown' && event.ctrlKey && event.key === 'v') {
+                event.preventDefault();
+
+                navigator.clipboard.readText().then(text => {
+                  if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                    wsRef.current.send(JSON.stringify({
+                      type: 'command',
+                      command: text
+                    }));
+                  }
+                });
+
                 return false;
               }
-            }
-            
-            return true;
-          });
-        }
-        break;
 
-      case 'data':
-        // Données reçues du serveur SSH
-        xtermRef.current?.write(message.data);
-        break;
+              // Gérer Ctrl+C (copier)
+              if (event.type === 'keydown' && event.ctrlKey && event.key === 'c') {
+                const selection = xtermRef.current?.getSelection();
 
-      case 'error':
-        // Erreur
-        xtermRef.current?.writeln(`\x1b[1;31mErreur: ${message.message}\x1b[0m`);
-        disconnectFromServer();
-        break;
+                if (selection && selection.length > 0) {
+                  navigator.clipboard.writeText(selection);
+                  return false;
+                }
+              }
 
-      case 'disconnected':
-        // Déconnexion
-        xtermRef.current?.writeln('\x1b[1;31mDéconnecté du serveur.\x1b[0m');
-        disconnectFromServer();
-        break;
-    }
-  };
+              return true;
+            });
+          }
+          break;
 
-  ws.onerror = (error) => {
-    console.error('Erreur WebSocket:', error);
-    xtermRef.current?.writeln('\x1b[1;31mErreur de connexion WebSocket.\x1b[0m');
-    disconnectFromServer();
-  };
+        case 'data':
+          // Données reçues du serveur SSH
+          xtermRef.current?.write(message.data);
+          break;
 
-  ws.onclose = () => {
-    if (isConnected) {
-      xtermRef.current?.writeln('\x1b[1;31mConnexion WebSocket fermée.\x1b[0m');
+        case 'error':
+          // Erreur
+          xtermRef.current?.writeln(`\x1b[1;31mErreur: ${message.message}\x1b[0m`);
+          disconnectFromServer();
+          break;
+
+        case 'disconnected':
+          // Déconnexion
+          xtermRef.current?.writeln('\x1b[1;31mDéconnecté du serveur.\x1b[0m');
+          disconnectFromServer();
+          break;
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error('Erreur WebSocket:', error);
+      xtermRef.current?.writeln('\x1b[1;31mErreur de connexion WebSocket.\x1b[0m');
       disconnectFromServer();
-    }
+    };
+
+    ws.onclose = () => {
+      if (isConnected) {
+        xtermRef.current?.writeln('\x1b[1;31mConnexion WebSocket fermée.\x1b[0m');
+        disconnectFromServer();
+      }
+    };
   };
-};
 
-// Fonction disconnectFromServer complète
-const disconnectFromServer = () => {
-  if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-    wsRef.current.send(JSON.stringify({
-      type: 'disconnect'
-    }));
-    wsRef.current.close();
-    wsRef.current = null;
-  }
-
-  if (xtermRef.current) {
-    // Désactiver l'entrée utilisateur
-    xtermRef.current.options.disableStdin = true;
-    
-    // Supprimer l'écouteur d'événements
-    // Supprimer l'écouteur d'événements
-    if (dataListenerRef.current) {
-      dataListenerRef.current.dispose();
-      dataListenerRef.current = null;
+  // Fonction disconnectFromServer complète
+  const disconnectFromServer = () => {
+    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({
+        type: 'disconnect'
+      }));
+      wsRef.current.close();
+      wsRef.current = null;
     }
-    // Supprimer le gestionnaire de touches personnalisé
-    xtermRef.current.attachCustomKeyEventHandler((event) => true);
-    
-    xtermRef.current.clear();
-    xtermRef.current.writeln('\x1b[1;31mDéconnecté du serveur.\x1b[0m');
-    xtermRef.current.writeln('\x1b[33mSélectionnez un serveur pour commencer.\x1b[0m');
-    xtermRef.current.writeln('');
-  }
-  
-  setIsConnected(false);
-  setSelectedServer(null);
-};
+
+    if (xtermRef.current) {
+      // Désactiver l'entrée utilisateur
+      xtermRef.current.options.disableStdin = true;
+
+      // Supprimer l'écouteur d'événements
+      // Supprimer l'écouteur d'événements
+      if (dataListenerRef.current) {
+        dataListenerRef.current.dispose();
+        dataListenerRef.current = null;
+      }
+      // Supprimer le gestionnaire de touches personnalisé
+      xtermRef.current.attachCustomKeyEventHandler((event) => true);
+
+      xtermRef.current.clear();
+      xtermRef.current.writeln('\x1b[1;31mDéconnecté du serveur.\x1b[0m');
+      xtermRef.current.writeln('\x1b[33mSélectionnez un serveur pour commencer.\x1b[0m');
+      xtermRef.current.writeln('');
+    }
+
+    setIsConnected(false);
+    setSelectedServer(null);
+  };
 
 
   return (
@@ -353,22 +392,32 @@ const disconnectFromServer = () => {
 
           <div className="flex items-center gap-3">
             {/* Sélecteur de serveur */}
-            <select
-              value={selectedServer || ''}
-              onChange={(e) => setSelectedServer(e.target.value || null)}
-              className="bg-[#1D2C42]/70 text-white px-3 py-2 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              disabled={isConnected}
-            >
-              <option value="">Sélectionner un serveur</option>
-              {servers.map((server) => (
-                // <option key={server.id} value={server.id}>
-                //   {server.name} ({server.username}@{server.ip}:{server.port})
-                // </option>
-                <option key={server.id} value={server.id}>
-                  {server.name}
-                </option>
-              ))}
-            </select>
+
+            <div className="relative w-[500px]">
+              <select
+                value={selectedServer || ''}
+                onChange={(e) => setSelectedServer(e.target.value || null)}
+                className="cursor-pointer bg-[#1D2C42]/70 text-white w-full px-4 py-2 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                disabled={isConnected}
+              >
+                <option className='bg-gray-800' value="">Sélectionner un serveur</option>
+                {useServer.servers.map((server) => (
+                  <option className='bg-gray-800' key={server.id} value={server.id}>
+                    {server.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Afficher le bouton de suppression à côté du select ou sous forme de liste séparée */}
+              {selectedServer && !isConnected && (
+                <div className="absolute right-6 top-0 h-full flex items-center">
+                  <DeleteServerButton
+                    serverId={selectedServer}
+                    onDelete={handleDeleteServer}
+                  />
+                </div>
+              )}
+            </div>
 
             {/* Boutons de connexion/déconnexion */}
             {!isConnected ? (

@@ -24,3 +24,15 @@ export interface IToast {
   description: string;
   status: 'success' | 'error' | 'info';
 }
+
+
+export interface IServer {
+  id: string;
+  name: string;
+  ip: string;
+  port: string;
+  username: string;
+  password: string;
+  connexionVerified: boolean;
+  rsaKey?: string;
+}
