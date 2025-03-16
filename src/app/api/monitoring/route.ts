@@ -1,49 +1,9 @@
-// import axios from 'axios'
 
-// export async function POST(req: Request) {
-//   try {
-//     const { id, url } = await req.json();
-
-//     // Effectuer une requête POST vers votre backend à la route /api/monitoring
-//     const response = await axios.post('/api/monitoring', { id, url });
-
-//     // Retourner la réponse du backend
-//     return new Response(JSON.stringify(response.data), {
-//       status: response.status,
-//       headers: { 'Content-Type': 'application/json' },
-//     });
-//   } catch (error: any) {
-//     console.error('Erreur lors de la requête vers /api/monitoring:', error);
-
-//     // Gérer les erreurs et retourner une réponse appropriée
-//     if (error.response) {
-//       // Erreur côté serveur (backend)
-//       return new Response(
-//         JSON.stringify({ message: 'Erreur côté backend', error: error.response.data }),
-//         { status: error.response.status, headers: { 'Content-Type': 'application/json' } }
-//       );
-//     } else if (error.request) {
-//       // Aucune réponse reçue
-//       return new Response(
-//         JSON.stringify({ message: 'Aucune réponse reçue du backend', error: error.message }),
-//         { status: 500, headers: { 'Content-Type': 'application/json' } }
-//       );
-//     } else {
-//       // Erreur lors de la configuration de la requête
-//       return new Response(
-//         JSON.stringify({ message: 'Erreur lors de la configuration de la requête', error: error.message }),
-//         { status: 500, headers: { 'Content-Type': 'application/json' } }
-//       );
-//     }
-//   }
-// }
 
 
 import axios from 'axios';
 import { NextResponse } from 'next/server';
 
-// URL de base pour les requêtes API
-const API_BASE_URL = 'http://localhost:4000/api';
 
 export async function POST(req: Request) {
   try {
@@ -89,7 +49,10 @@ export async function POST(req: Request) {
     // Étape 2: Récupérer l'historique des statuts depuis le backend
     let statusHistory = [];
     try {
-      const historyResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/instances/${id}`);
+      //console.log(`${process.env.NEXT_PUBLIC_API_URL}/instance/${id}`);
+
+      const historyResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/instance/${id}`);
+
       if (historyResponse.data && historyResponse.data.statusHistory) {
         try {
           statusHistory = JSON.parse(historyResponse.data.statusHistory);
@@ -100,7 +63,6 @@ export async function POST(req: Request) {
       }
     } catch (error) {
       console.error('Erreur lors de la récupération de l\'historique:', error);
-      // Continuer avec un historique vide si la récupération échoue
     }
 
     // Étape 3: Ajouter le nouveau statut à l'historique
@@ -120,7 +82,7 @@ export async function POST(req: Request) {
 
     // Étape 4: Mettre à jour l'instance via le backend
     try {
-      const updateResponse = await axios.put(`${API_BASE_URL}/instances/${id}`, {
+      const updateResponse = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/instance/${id}`, {
         status,
         statusHistory,
         statusCode,

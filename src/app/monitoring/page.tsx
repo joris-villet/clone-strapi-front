@@ -179,9 +179,6 @@ export default function Monitoring() {
 
       <div className="container mx-auto px-4 py-6 max-w-7xl relative">
         <div className="container mx-auto px-4 py-6 max-w-7xl relative">
-          {/* <div className='bg-image'></div> */}
-          <div className='absolute -z-10 bg-blue-800 blur-3xl h-[200px] w-[1200px] opacity-50'></div>
-          <div className='fixed bottom-0 left-0 -z-10 bg-cyan-300 blur-3xl h-[100px] w-full opacity-10 -rotate-12'></div>
           <div className="flex flex-col space-y-6">
             {/* Header */}
             <div className="flex justify-between items-center">
@@ -347,7 +344,7 @@ export default function Monitoring() {
 
                   <div className="grid grid-cols-12 gap-4">
                     {instances.map((instance) => (
-                      <div key={instance.id} className="overflow-hidden bg-[#3A6A9B]/30 backdrop-blur-sm border border-[#3A6A9B]/40 col-span-4 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                      <div key={instance.id} className="overflow-hidden bg-card-instance-custom backdrop-blur-sm border border-[#3A6A9B]/40 col-span-4 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex flex-col h-full relative">
 
                           <div className='absolute bottom-0 -right-4 -z-10 bg-purple-500 blur-3xl h-[40px] w-[150px] opacity-60'></div>

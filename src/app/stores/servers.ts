@@ -27,7 +27,7 @@ export const useServerStore = create<ServerStore>((set, get) => ({
   fetchServers: async () => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/servers`);
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/server`);
       set({ servers: response.data, isLoading: false });
     } catch (error) {
       console.error('Erreur lors du chargement des serveurs:', error);
@@ -41,7 +41,7 @@ export const useServerStore = create<ServerStore>((set, get) => ({
   addServer: async (serverData) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/servers`, serverData);
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/server`, serverData);
       set(state => ({ 
         servers: [...state.servers, response.data],
         isLoading: false 
@@ -60,7 +60,7 @@ export const useServerStore = create<ServerStore>((set, get) => ({
   deleteServer: async (id) => {
     set({ isLoading: true, error: null });
     try {
-      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/servers/${id}`);
+      await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/server/${id}`);
       set(state => ({ 
         servers: state.servers.filter(server => server.id !== id),
         isLoading: false 
@@ -79,7 +79,7 @@ export const useServerStore = create<ServerStore>((set, get) => ({
   updateServer: async (id, data) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/servers/${id}`, data);
+      const response = await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/server/${id}`, data);
       set(state => ({ 
         servers: state.servers.map(server => 
           server.id === id ? { ...server, ...response.data } : server

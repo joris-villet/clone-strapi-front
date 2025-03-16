@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL
 
 // Type pour une instance
 interface Instance {
@@ -18,9 +17,8 @@ interface Instance {
 export async function GET() {
   try {
 
-    console.log(API_BASE_URL)
     // Effectuer une requête GET vers votre route Express
-    const response = await axios.get(`${API_BASE_URL}/instances`);
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/instance`);
 
     // Retourner les données récupérées
     return NextResponse.json(response.data);
@@ -43,7 +41,7 @@ export async function POST(req: Request) {
     console.log('body =>', body);
 
     // Effectuer une requête POST vers votre backend Express
-    const response = await axios.post(`${API_BASE_URL}/instances`, body, {
+    const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/instance`, body, {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -77,7 +75,7 @@ export async function DELETE(request: Request) {
     }
 
     // Effectuer une requête DELETE vers votre backend Express
-    const response = await axios.delete(`${API_BASE_URL}/instances`, {
+    const response = await axios.delete(`${process.env.NEXT_PUBLIC_API_URL}/instance`, {
       params: { id },
     });
 
