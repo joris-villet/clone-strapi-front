@@ -22,7 +22,7 @@ interface TerminalProps {
   servers: IServer[];
 }
 
-const Terminal: React.FC<TerminalProps> = ({ servers }) => {
+const Terminal: React.FC = () => {
   const [selectedServer, setSelectedServer] = useState<string | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const terminalRef = useRef<HTMLDivElement>(null);
@@ -34,6 +34,21 @@ const Terminal: React.FC<TerminalProps> = ({ servers }) => {
   const dataListenerRef = useRef<{ dispose: () => void } | null>(null);
 
   const useServer = useServerStore()
+
+  useEffect(() => {
+    const fetchServers = async () => {
+      try {
+
+        useServer.fetchServers();
+      } catch (err) {
+        console.error('Erreur lors du chargement des serveurs:', err);
+      } finally {
+      }
+    };
+
+    fetchServers();
+  }, []);
+
 
   // Vérifier si nous sommes côté client
   useEffect(() => {
@@ -237,7 +252,8 @@ const Terminal: React.FC<TerminalProps> = ({ servers }) => {
   const connectToServer = () => {
     if (!selectedServer || !xtermRef.current) return;
 
-    const server = servers.find(s => s.id === selectedServer);
+    // const server = servers.find(s => s.id === selectedServer);
+    const server = useServer.servers.find(s => s.id === selectedServer);
     if (!server) return;
 
     xtermRef.current.clear();
@@ -454,7 +470,7 @@ const Terminal: React.FC<TerminalProps> = ({ servers }) => {
           {!isConnected && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <p className="text-gray-400 text-lg bg-black/30 px-4 py-2 rounded">
-                {servers.length === 0
+                {useServer.servers.length === 0
                   ? "Ajoutez un serveur pour utiliser le terminal"
                   : "Connectez-vous à un serveur pour utiliser le terminal"}
               </p>
